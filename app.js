@@ -1,15 +1,15 @@
 /**
  * ============================================================================
  * لِسَان | LISAN — الفضاء الرقمي لطلبة اللسانيات العربية
- * المستودع العام — المحرك الرئيسي الشامل (app.js) — الإصدار 3.0
+ * المستودع العام — المحرك الرئيسي الشامل (app.js) — الإصدار 3.1
  * ============================================================================
  * 1. نظام عضويات الطلبة (Email/Password + Google Auth + تفعيل البريد + استعادة كلمة المرور)
- * 2. التحقق المزدوج + البطاقة الجامعية السرية + التدرج العادل لحالات الحساب والإشعارات الفورية
- * 3. سجل الدرجات الخاص مع خيار الإظهار العلني المؤكَّد + الشارات الأكاديمية التحفيزية
- * 4. نظام التحكم الثلاثي بالميزات (on: مفعّل | off: مخفي | soon: قريباً)
- * 5. دردشة الدعم الفني الذكية للجميع (بمعرّف تذكرة موحد LISAN-XXXXXXXX + متابعة الردود)
- * 6. الصفحات التعريفية المرنة (من نحن، الرسالة والمنهجية، الخصوصية والشروط)
- * 7. كافة ميزات الإصدار 2.0 (البحث الذكي، الصور الحرة، Lightbox، الورق الدافئ، YouTube، PDF، SEO)
+ * 2. الحظر الصارم للحسابات المشطوبة نهائياً (terminated): طرد فوري + إظهار السبب + منع إعادة التسجيل
+ * 3. التحقق المزدوج + البطاقة الجامعية السرية + التدرج العادل لحالات الحساب والإشعارات الفورية
+ * 4. سجل الدرجات الخاص مع خيار الإظهار العلني المؤكَّد + الشارات الأكاديمية التحفيزية
+ * 5. نظام التحكم الثلاثي بالميزات (on: مفعّل | off: مخفي | soon: قريباً)
+ * 6. دردشة الدعم الفني الذكية للجميع (بمعرّف تذكرة موحد LISAN-XXXXXXXX + متابعة الردود)
+ * 7. الصفحات التعريفية المرنة + البحث الذكي + الصور الحرة + Lightbox + الورق الدافئ + YouTube + PDF + SEO
  * ============================================================================
  */
 
@@ -27,7 +27,6 @@ import {
   query,
   where,
   orderBy,
-  limit,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
@@ -78,7 +77,7 @@ const DEFAULT_SETTINGS = {
   contactEmail: "",
   themeAccent: "#0071e3",
   publicBaseUrl: "",
-  studentIdCardMode: "optional", // optional | required | hidden
+  studentIdCardMode: "optional",
   requireLoginForQuiz: false,
   supportContacts: {
     whatsapp: "",
@@ -86,13 +85,7 @@ const DEFAULT_SETTINGS = {
     telegram: "",
     welcomeMessage: "مرحباً بك في مركز الدعم الفني لمنصة لِسَان! اختر نوع المشكلة أو اكتب استفسارك ليتم تحويلك مباشرة إلى الكادر البشري."
   },
-  socialLinks: {
-    twitter: "",
-    telegram: "",
-    youtube: "",
-    facebook: ""
-  },
-  // مفاتيح الميزات الثلاثية: "on" | "off" | "soon"
+  socialLinks: { twitter: "", telegram: "", youtube: "", facebook: "" },
   features: {
     globalSearch: "on",
     sectionLibrary: "on",
@@ -155,10 +148,7 @@ const DEFAULT_SETTINGS = {
 
 const DEFAULT_PAGES = [
   {
-    id: "about",
-    slug: "about",
-    order: 1,
-    visible: true,
+    id: "about", slug: "about", order: 1, visible: true,
     title: "من نحن",
     subtitle: "تعرف على منصة لِسَان | LISAN ورؤيتها الأكاديمية",
     bodyHtml: `
@@ -173,10 +163,7 @@ const DEFAULT_PAGES = [
     `
   },
   {
-    id: "methodology",
-    slug: "methodology",
-    order: 2,
-    visible: true,
+    id: "methodology", slug: "methodology", order: 2, visible: true,
     title: "الرسالة والمنهجية",
     subtitle: "ضوابط النشر العلمي وتوثيق العضويات في المنصة",
     bodyHtml: `
@@ -187,10 +174,7 @@ const DEFAULT_PAGES = [
     `
   },
   {
-    id: "privacy",
-    slug: "privacy",
-    order: 3,
-    visible: true,
+    id: "privacy", slug: "privacy", order: 3, visible: true,
     title: "الخصوصية وشروط الاستخدام",
     subtitle: "كيف نحمي بياناتك الأكاديمية وضوابط المشاركة العادلة",
     bodyHtml: `
@@ -300,9 +284,9 @@ const state = {
   studentResults: [],
   studentNotifications: [],
   studentSubmissions: [],
-  profileTab: "overview", // overview | grades | submissions | notifications | edit
+  profileTab: "overview",
   route: {
-    view: "home", // home | section | item | quiz | page | profile | student
+    view: "home",
     sectionId: null,
     branch: "الكل",
     itemId: null,
@@ -350,7 +334,7 @@ const ICONS = {
 };
 
 /* ============================================================================
- * 6. نظام التحكم الثلاثي بالميزات (on / off / soon) + مساعدات أساسية
+ * 6. نظام التحكم الثلاثي بالميزات + نافذة الشطب النهائي + مساعدات أساسية
  * ============================================================================ */
 function getFeatureState(key) {
   const val = state.settings.features?.[key];
@@ -369,6 +353,27 @@ function showComingSoonModal(featureName = "هذه الميزة") {
     </div>
   `, "compact");
   document.getElementById("close-soon-ok")?.addEventListener("click", closeDynamicModal);
+}
+
+function showTerminatedAccountModal(reason = "") {
+  openDynamicModal("حساب مشطوب نهائياً", `
+    <div class="soon-box">
+      <div class="auth-err-box" style="margin-bottom:14px">
+        ⛔ تم شطب وإنهاء هذا الحساب نهائياً بقرار من الإدارة العليا لمنصة لِسَان.
+      </div>
+      <p style="margin-bottom:10px">لا يمكن الدخول إلى هذا الحساب أو إعادة التسجيل بنفس البريد الإلكتروني مجدداً.</p>
+      ${reason ? `<div class="bot-bubble" style="text-align:right"><strong>السبب المسجّل في السجل:</strong><p>${escapeHtml(reason)}</p></div>` : ""}
+      <div class="dialog-actions" style="justify-content:center; margin-top:18px">
+        ${getFeatureState("supportChat") === "on" ? `<button type="button" class="tool-btn" id="term-contact-support">${ICONS.support} التواصل مع الدعم</button>` : ""}
+        <button type="button" class="btn-primary-glass" id="term-close-ok">إغلاق</button>
+      </div>
+    </div>
+  `, "compact");
+  document.getElementById("term-close-ok")?.addEventListener("click", closeDynamicModal);
+  document.getElementById("term-contact-support")?.addEventListener("click", () => {
+    closeDynamicModal();
+    openSupportChatModal("account_issue");
+  });
 }
 
 function escapeHtml(str = "") {
@@ -658,7 +663,7 @@ function updateSEO({ title, description, image, type = "website", schemaData = n
 }
 
 /* ============================================================================
- * 8. جلب البيانات والصفحات والعضوية والإشعارات
+ * 8. جلب البيانات والصفحات والعضوية والإشعارات + التحقق من الشطب النهائي
  * ============================================================================ */
 function deepMergeSettings(remote = {}) {
   const merged = structuredClone(DEFAULT_SETTINGS);
@@ -732,6 +737,19 @@ async function loadPlatformData() {
   }
 }
 
+async function checkEmailTerminated(email = "") {
+  const lower = String(email || "").trim().toLowerCase();
+  if (!lower) return null;
+  try {
+    const snap = await getDocs(query(collection(db, "students"), where("emailLower", "==", lower)));
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (data.status === "terminated") return data;
+    }
+  } catch {}
+  return null;
+}
+
 async function loadStudentData(uid) {
   if (!uid) {
     state.studentProfile = null;
@@ -739,15 +757,29 @@ async function loadStudentData(uid) {
     state.studentNotifications = [];
     state.studentSubmissions = [];
     updateHeaderAccountUi();
-    return;
+    return { terminated: false };
   }
 
   try {
     const profileRef = doc(db, "students", uid);
     const snap = await getDoc(profileRef);
+
     if (snap.exists()) {
       const data = { id: snap.id, ...snap.data() };
-      // مزامنة حالة تأكيد البريد الإلكتروني تلقائياً مع Firebase Auth
+
+      // حظر صارم وفوري للحسابات المشطوبة نهائياً
+      if (data.status === "terminated") {
+        state.studentProfile = null;
+        state.studentResults = [];
+        state.studentNotifications = [];
+        state.studentSubmissions = [];
+        await signOut(auth).catch(() => {});
+        updateHeaderAccountUi();
+        showTerminatedAccountModal(data.statusReason || "");
+        if (state.route.view === "profile") navigateTo({ view: "home" }, false);
+        return { terminated: true, reason: data.statusReason || "" };
+      }
+
       if (state.authUser?.emailVerified && !data.emailVerified) {
         const nextStatus = data.status === "pending_email" ? "pending_review" : data.status;
         await updateDoc(profileRef, { emailVerified: true, status: nextStatus, updatedAt: new Date().toISOString() });
@@ -756,6 +788,15 @@ async function loadStudentData(uid) {
       }
       state.studentProfile = data;
     } else {
+      // فحص البريد في حال كان مشطوباً بسجل سابق
+      const termRec = await checkEmailTerminated(state.authUser?.email || "");
+      if (termRec) {
+        await signOut(auth).catch(() => {});
+        state.studentProfile = null;
+        updateHeaderAccountUi();
+        showTerminatedAccountModal(termRec.statusReason || "");
+        return { terminated: true, reason: termRec.statusReason || "" };
+      }
       state.studentProfile = null;
     }
 
@@ -778,6 +819,7 @@ async function loadStudentData(uid) {
     console.warn("Student data load issue:", err);
   }
   updateHeaderAccountUi();
+  return { terminated: false };
 }
 
 function computeStudentBadges(profile, results = [], publishedSubsCount = 0) {
@@ -806,7 +848,8 @@ const STUDENT_STATUS_MAP = {
   restricted_readonly: { label: "تصفح وقراءة فقط", tone: "warn", desc: "يمكنك تصفح المنصة والاطلاع على سجلك، مع تقييد مؤقت للاختبارات والمساهمات." },
   hidden_profile: { label: "موثق (ملف عام مخفي)", tone: "info", desc: "حسابك نشط داخلياً، مع إخفاء بطاقتك العامة عن الزوار." },
   suspended: { label: "حساب معلّق مؤقتاً", tone: "danger", desc: "تم تعليق الحساب مؤقتاً من قِبل الإدارة. يمكنك التواصل مع الدعم الفني للاستفسار أو الاعتراض." },
-  rejected: { label: "يحتاج استكمال بيانات", tone: "danger", desc: "لم يُعتمد الطلب بعد. يرجى مراجعة الملاحظة وتحديث بياناتك لإعادة الإرسال." }
+  rejected: { label: "يحتاج استكمال بيانات", tone: "danger", desc: "لم يُعتمد الطلب بعد. يرجى مراجعة الملاحظة وتحديث بياناتك لإعادة الإرسال." },
+  terminated: { label: "حساب مشطوب نهائياً", tone: "danger", desc: "تم شطب هذا الحساب نهائياً بقرار من الإدارة العليا." }
 };
 
 /* ============================================================================
@@ -852,7 +895,6 @@ function applyGlobalShell() {
     }
   }
 
-  // التذييل + روابط الصفحات التعريفية المرنة
   const footerText = document.getElementById("footer-text");
   if (footerText) footerText.textContent = s.footerText;
 
@@ -1528,7 +1570,7 @@ function renderItemDetailView(container, itemId) {
   if (ytId) setupSmartYouTubePlayers(container);
 }
 
-/* ---------- 11.4 الصفحات التعريفية المرنة (من نحن، المنهجية، الخصوصية) ---------- */
+/* ---------- 11.4 الصفحات التعريفية المرنة ---------- */
 function renderStaticPageView(container, pageSlug) {
   if (getFeatureState("staticPages") === "off") { navigateTo({ view: "home" }, false); return; }
   const page = state.pages.find((p) => (p.slug === pageSlug || p.id === pageSlug) && p.visible !== false);
@@ -1571,13 +1613,13 @@ function handleStartQuizClick(quizId) {
       openAuthModal("login");
       return;
     }
-    if (["suspended", "restricted_readonly", "pending_email", "pending_review", "rejected"].includes(state.studentProfile.status)) {
+    if (["suspended", "restricted_readonly", "pending_email", "pending_review", "rejected", "terminated"].includes(state.studentProfile.status)) {
       showToast("حسابك لا يسمح بخوض الاختبارات حالياً — راجع تفاصيل حالتك في ملفك الشخصي");
       navigateTo({ view: "profile" });
       return;
     }
-  } else if (state.studentProfile && ["suspended", "restricted_readonly"].includes(state.studentProfile.status)) {
-    showToast("تم تقييد خوض الاختبارات مؤقتاً على حسابك — راجع إشعاراتك");
+  } else if (state.studentProfile && ["suspended", "restricted_readonly", "terminated"].includes(state.studentProfile.status)) {
+    showToast("تم تقييد خوض الاختبارات على حسابك — راجع إشعاراتك");
     navigateTo({ view: "profile" });
     return;
   }
@@ -1739,7 +1781,7 @@ function renderQuizStep(container) {
 }
 
 /* ============================================================================
- * 13. نظام حسابات الطلبة: التسجيل + Google + التحقق + استعادة كلمة المرور
+ * 13. نظام حسابات الطلبة: التسجيل + Google + التحقق + منع المشطوبين
  * ============================================================================ */
 function mapAuthError(code = "") {
   const map = {
@@ -1750,6 +1792,9 @@ function mapAuthError(code = "") {
     "auth/wrong-password": "كلمة المرور غير صحيحة.",
     "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "auth/popup-closed-by-user": "تم إغلاق نافذة تسجيل الدخول عبر Google قبل الإكمال.",
+    "auth/popup-blocked": "حظر المتصفح النافذة المنبثقة؛ يرجى فتح الموقع في متصفح Chrome أو Safari والسماح بالنوافذ المنبثقة.",
+    "auth/unauthorized-domain": "هذا النطاق غير مضاف بعد في النطاقات المصرح بها (Authorized domains) داخل إعدادات Firebase.",
+    "auth/operation-not-allowed": "تسجيل الدخول بهذه الطريقة غير مفعّل في إعدادات Firebase Authentication.",
     "auth/too-many-requests": "محاولات كثيرة متتالية؛ يرجى الانتظار قليلاً ثم المحاولة."
   };
   return map[code] || "تعذر إتمام العملية حالياً، يرجى المحاولة مجدداً.";
@@ -1886,7 +1931,6 @@ function openAuthModal(tab = "login") {
   document.getElementById("login-open-support")?.addEventListener("click", () => { closeDynamicModal(); openSupportChatModal("lost_account"); });
   document.getElementById("reset-open-support")?.addEventListener("click", () => { closeDynamicModal(); openSupportChatModal("lost_account"); });
 
-  // رفع البطاقة الجامعية
   document.getElementById("st-reg-idcard-file")?.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1899,13 +1943,23 @@ function openAuthModal(tab = "login") {
     }
   });
 
-  // الدخول السريع عبر Google
+  // الدخول السريع عبر Google (مع فحص الشطب النهائي)
   document.getElementById("google-signin-btn")?.addEventListener("click", async () => {
     const errEl = document.getElementById("st-auth-err");
     try {
       const cred = await signInWithPopup(auth, googleProvider);
       const user = cred.user;
+
+      // فحص إن كان الحساب أو البريد مشطوباً نهائياً
+      const termRec = await checkEmailTerminated(user.email || "");
       const snap = await getDoc(doc(db, "students", user.uid));
+      if (termRec || (snap.exists() && snap.data().status === "terminated")) {
+        const reason = (snap.exists() ? snap.data().statusReason : "") || termRec?.statusReason || "";
+        await signOut(auth).catch(() => {});
+        showTerminatedAccountModal(reason);
+        return;
+      }
+
       if (snap.exists()) {
         await loadStudentData(user.uid);
         closeDynamicModal();
@@ -1920,21 +1974,29 @@ function openAuthModal(tab = "login") {
     }
   });
 
-  // دخول بالبريد وكلمة المرور
+  // دخول بالبريد وكلمة المرور (مع فحص الشطب النهائي قبل وبعد الدخول)
   document.getElementById("student-login-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const errEl = document.getElementById("st-auth-err");
     const btn = document.getElementById("st-login-submit");
+    const email = document.getElementById("st-login-email").value.trim();
+
     errEl.hidden = true;
     btn.disabled = true;
     btn.textContent = "جارٍ تسجيل الدخول...";
     try {
-      const cred = await signInWithEmailAndPassword(
-        auth,
-        document.getElementById("st-login-email").value.trim(),
-        document.getElementById("st-login-pass").value
-      );
-      await loadStudentData(cred.user.uid);
+      const termBefore = await checkEmailTerminated(email);
+      if (termBefore) {
+        btn.disabled = false;
+        btn.textContent = "تسجيل الدخول";
+        showTerminatedAccountModal(termBefore.statusReason || "");
+        return;
+      }
+
+      const cred = await signInWithEmailAndPassword(auth, email, document.getElementById("st-login-pass").value);
+      const res = await loadStudentData(cred.user.uid);
+      if (res?.terminated) return;
+
       closeDynamicModal();
       showToast("تم تسجيل الدخول بنجاح ✓");
       navigateTo({ view: "profile" });
@@ -1946,15 +2008,22 @@ function openAuthModal(tab = "login") {
     }
   });
 
-  // استعادة كلمة المرور
+  // استعادة كلمة المرور (مع منع المشطوبين نهائياً)
   document.getElementById("student-reset-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const errEl = document.getElementById("st-auth-err");
     const btn = document.getElementById("st-reset-submit");
+    const email = document.getElementById("st-reset-email").value.trim();
     errEl.hidden = true;
     btn.disabled = true;
     try {
-      await sendPasswordResetEmail(auth, document.getElementById("st-reset-email").value.trim());
+      const termRec = await checkEmailTerminated(email);
+      if (termRec) {
+        btn.disabled = false;
+        showTerminatedAccountModal(termRec.statusReason || "");
+        return;
+      }
+      await sendPasswordResetEmail(auth, email);
       closeDynamicModal();
       showToast("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني ✓");
     } catch (err) {
@@ -1964,7 +2033,7 @@ function openAuthModal(tab = "login") {
     }
   });
 
-  // تسجيل طالب جديد بالبريد وكلمة المرور
+  // تسجيل طالب جديد بالبريد وكلمة المرور (مع منع البريد المكرر أو المشطوب نهائياً)
   document.getElementById("student-register-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const errEl = document.getElementById("st-auth-err");
@@ -1984,9 +2053,15 @@ function openAuthModal(tab = "login") {
     btn.textContent = "جارٍ إنشاء الحساب...";
 
     try {
-      // فحص إضافي ضد Firestore لمنع تكرار نفس البريد مرتين
       const dupSnap = await getDocs(query(collection(db, "students"), where("emailLower", "==", emailLower)));
       if (!dupSnap.empty) {
+        const existingData = dupSnap.docs[0].data();
+        if (existingData.status === "terminated") {
+          btn.disabled = false;
+          btn.textContent = "إنشاء الحساب وإرسال رابط التفعيل";
+          showTerminatedAccountModal(existingData.statusReason || "");
+          return;
+        }
         errEl.textContent = "هذا البريد الإلكتروني مسجل لدينا مسبقاً؛ لا يمكن إنشاء حسابين بنفس البريد.";
         errEl.hidden = false;
         btn.disabled = false;
@@ -2101,9 +2176,17 @@ function openCompleteGoogleProfileModal(user) {
     e.preventDefault();
     const idCardUrl = document.getElementById("gc-idcard")?.value.trim() || "";
     if (idMode === "required" && !idCardUrl) { showToast("يرجى رفع صورة البطاقة الجامعية"); return; }
+
+    const email = user.email || "";
+    const termRec = await checkEmailTerminated(email);
+    if (termRec) {
+      await signOut(auth).catch(() => {});
+      showTerminatedAccountModal(termRec.statusReason || "");
+      return;
+    }
+
     const btn = document.getElementById("gc-submit");
     btn.disabled = true;
-    const email = user.email || "";
     await setDoc(doc(db, "students", user.uid), {
       uid: user.uid,
       email,
@@ -2167,6 +2250,13 @@ function renderStudentDashboardView(container) {
   }
 
   const p = state.studentProfile;
+  if (p.status === "terminated") {
+    signOut(auth).catch(() => {});
+    showTerminatedAccountModal(p.statusReason || "");
+    navigateTo({ view: "home" }, false);
+    return;
+  }
+
   const stInfo = STUDENT_STATUS_MAP[p.status] || STUDENT_STATUS_MAP.pending_review;
   const pubSubsCount = state.studentSubmissions.filter((x) => x.status === "published").length;
   const badges = computeStudentBadges(p, state.studentResults, pubSubsCount);
@@ -2183,7 +2273,6 @@ function renderStudentDashboardView(container) {
         <span class="crumb-current">ملفي الأكاديمي الخاص</span>
       </nav>
 
-      <!-- بطاقة حالة الحساب والإشعار العادل -->
       <div class="status-banner-card tone-${stInfo.tone}">
         <div>
           <strong>حالة الحساب: ${stInfo.label}</strong>
@@ -2200,7 +2289,6 @@ function renderStudentDashboardView(container) {
         </div>
       </div>
 
-      <!-- البطاقة التعريفية الرقمية للطالب -->
       <section class="glass-card student-hero-card heritage-frame">
         <div class="student-hero-main">
           ${renderAvatarHtml(p.avatarUrl, p.fullName, "xl")}
@@ -2222,7 +2310,6 @@ function renderStudentDashboardView(container) {
         </div>
       </section>
 
-      <!-- تبويبات لوحة الطالب -->
       <div class="glass-panel profile-tabs-bar">
         <button type="button" class="branch-tab ${state.profileTab === "overview" ? "active" : ""}" data-ptab="overview">ملخص وسجل الدرجات (${state.studentResults.length})</button>
         <button type="button" class="branch-tab ${state.profileTab === "submissions" ? "active" : ""}" data-ptab="submissions">مساهماتي (${state.studentSubmissions.length})</button>
@@ -2269,7 +2356,6 @@ function renderStudentDashboardView(container) {
 
   const tabBody = document.getElementById("profile-tab-content");
 
-  // 1. تبويب سجل الدرجات الخاص + خيار الكشف العلني المؤكَّد
   if (state.profileTab === "overview") {
     const avg = state.studentResults.length
       ? Math.round(state.studentResults.reduce((s, r) => s + Number(r.percentage || 0), 0) / state.studentResults.length)
@@ -2313,7 +2399,6 @@ function renderStudentDashboardView(container) {
       </div>
     `;
 
-    // نافذة التأكيد الصريحة عند كشف الدرجات علناً
     document.getElementById("toggle-public-grades")?.addEventListener("change", (e) => {
       const chk = e.target;
       if (pubGradesState === "soon") {
@@ -2322,7 +2407,7 @@ function renderStudentDashboardView(container) {
         return;
       }
       if (chk.checked) {
-        chk.checked = false; // لا يتغير إلا بعد التأكيد الصريح
+        chk.checked = false;
         openDynamicModal("تأكيد كشف الدرجات علناً", `
           <p><strong>هل أنت متأكد من ذلك؟</strong></p>
           <p style="color:var(--text-secondary); font-size:0.92rem">عند تفعيل هذا الخيار، سيصبح سجل درجاتك في الاختبارات مرئياً لكل من يزور ملفك الأكاديمي العام. يمكنك إخفاؤه مجدداً في أي وقت.</p>
@@ -2348,7 +2433,6 @@ function renderStudentDashboardView(container) {
     });
   }
 
-  // 2. تبويب مساهمات الطالب
   else if (state.profileTab === "submissions") {
     const stLbl = { published: "منشورة", pending: "قيد المراجعة", draft: "مسودة / ملاحظة" };
     tabBody.innerHTML = `
@@ -2381,7 +2465,6 @@ function renderStudentDashboardView(container) {
     });
   }
 
-  // 3. تبويب الإشعارات الفورية
   else if (state.profileTab === "notifications") {
     tabBody.innerHTML = `
       <div class="glass-card profile-section-card">
@@ -2413,7 +2496,6 @@ function renderStudentDashboardView(container) {
     });
   }
 
-  // 4. تبويب تعديل الملف الشخصي للطالب
   else if (state.profileTab === "edit") {
     tabBody.innerHTML = `
       <form id="student-edit-profile-form" class="glass-card profile-section-card clean-form">
@@ -2500,7 +2582,7 @@ function renderStudentDashboardView(container) {
   }
 }
 
-/* ---------- الملف العام المختصر للطالب (يظهر للزوار بدون البريد أو البطاقة) ---------- */
+/* ---------- الملف العام المختصر للطالب ---------- */
 async function renderPublicStudentView(container, studentUid) {
   container.innerHTML = `<div class="container reader-page"><div class="glass-card empty-state"><p>جارٍ تحميل البطاقة الأكاديمية...</p></div></div>`;
   try {
@@ -2511,7 +2593,8 @@ async function renderPublicStudentView(container, studentUid) {
       return;
     }
     const st = snap.data();
-    if (["hidden_profile", "suspended", "pending_email", "pending_review", "rejected"].includes(st.status) && state.authUser?.uid !== studentUid) {
+    const hiddenStatuses = ["hidden_profile", "suspended", "pending_email", "pending_review", "rejected", "terminated"];
+    if (st.status === "terminated" || (hiddenStatuses.includes(st.status) && state.authUser?.uid !== studentUid)) {
       container.innerHTML = `<div class="container reader-page"><div class="glass-card empty-state"><h3>هذا الملف الشخصي غير متاح للعرض العام حالياً</h3><button type="button" class="btn-primary-glass" id="pub-st-home">العودة للرئيسية</button></div></div>`;
       document.getElementById("pub-st-home")?.addEventListener("click", () => navigateTo({ view: "home" }));
       return;
@@ -2597,7 +2680,7 @@ async function generateUniqueTicketId() {
   for (let i = 0; i < 6; i++) {
     const arr = new Uint32Array(1);
     crypto.getRandomValues(arr);
-    const num = String((arr[0] % 90000000) + 10000000); // 8 أرقام عشوائية واسعة النطاق
+    const num = String((arr[0] % 90000000) + 10000000);
     const id = `LISAN-${num}`;
     const exists = await getDoc(doc(db, "tickets", id));
     if (!exists.exists()) return id;
@@ -2635,13 +2718,11 @@ function openSupportChatModal(presetTopic = "") {
 
   openDynamicModal("مركز الدعم الفني — لِسَان", `
     <div class="support-shell">
-      <!-- ترحيب المساعد الآلي -->
       <div class="bot-bubble">
         <strong>المساعد الآلي لمنصة لِسَان</strong>
         <p>${escapeHtml(sc.welcomeMessage || DEFAULT_SETTINGS.supportContacts.welcomeMessage)}</p>
       </div>
 
-      <!-- قنوات التواصل المباشر المضافة من الإدارة -->
       ${(sc.whatsapp || sc.email || sc.telegram) ? `
         <div class="support-direct-bar">
           <span>قنوات التواصل السريع:</span>
@@ -2656,7 +2737,6 @@ function openSupportChatModal(presetTopic = "") {
         <button type="button" class="auth-tab-btn" id="sup-tab-track">متابعة تذكرة برقمها</button>
       </div>
 
-      <!-- 1. فتح تذكرة جديدة (متاح بدون تسجيل دخول) -->
       <form id="support-new-form" class="clean-form">
         <div class="form-group">
           <label>اختر المشكلة الأقرب (أو اكتبها بحرية):</label>
@@ -2684,7 +2764,6 @@ function openSupportChatModal(presetTopic = "") {
         <button type="submit" class="btn-primary-glass full-width" id="sup-submit-btn">إرسال التذكرة والتحويل للكادر البشري</button>
       </form>
 
-      <!-- 2. متابعة تذكرة سابقة ومحادثة الكادر البشري -->
       <div id="support-track-pane" hidden>
         <div class="upload-row" style="margin-bottom:10px">
           <input type="text" id="sup-track-input" dir="ltr" placeholder="أدخل رقم التذكرة مثل LISAN-48291735" value="${escapeHtml(recentIds[0] || "")}" />
@@ -2837,7 +2916,7 @@ function openSupportChatModal(presetTopic = "") {
 }
 
 /* ============================================================================
- * 16. مساهمات الطلبة (مرتبطة بحساب الطالب الموثق) + Spotlight + Lightbox
+ * 16. مساهمات الطلبة + Spotlight + Lightbox + يوتيوب والروابط الخارجية
  * ============================================================================ */
 function handleOpenSubmissionClick() {
   const subState = getFeatureState("studentSubmissions");
@@ -2851,8 +2930,8 @@ function handleOpenSubmissionClick() {
       openAuthModal("login");
       return;
     }
-    if (["suspended", "restricted_publish", "restricted_readonly"].includes(state.studentProfile.status)) {
-      showToast("حسابك مقيّد مؤقتاً من إرسال المساهمات — راجع الإشعارات أو تواصل مع الدعم");
+    if (["suspended", "restricted_publish", "restricted_readonly", "terminated"].includes(state.studentProfile.status)) {
+      showToast("حسابك مقيّد من إرسال المساهمات — راجع الإشعارات أو تواصل مع الدعم");
       navigateTo({ view: "profile" });
       return;
     }
@@ -3139,12 +3218,11 @@ async function init() {
   setupExternalLinkInterceptor();
   setupSubmissionForm();
 
-  // مراقبة حالة تسجيل دخول الطالب لحظياً عبر Firebase Auth
   onAuthStateChanged(auth, async (user) => {
     state.authUser = user;
     state.authReady = true;
-    await loadStudentData(user?.uid || null);
-    if (state.route.view === "profile") renderCurrentView();
+    const res = await loadStudentData(user?.uid || null);
+    if (!res?.terminated && state.route.view === "profile") renderCurrentView();
   });
 
   renderCurrentView();
