@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <!-- الأساسيات المهيأة لمحركات البحث (تتحدث ديناميكياً لكل صفحة ومادة عبر app.js) -->
+  <title>لِسَان | LISAN — الفضاء الرقمي لطلبة اللسانيات العربية</title>
+  <meta name="description" content="لِسَان | LISAN فضاء رقمي أكاديمي متخصص لطلبة اللسانيات العربية: المكتبة اللسانية، المعجم اللساني، اختبارات تفاعلية، فضاء الباحث، محاضرات ودروس، وفضاء التبادل العلمي." />
+  <meta name="keywords" content="لِسَان, LISAN, اللسانيات العربية, المكتبة اللسانية, المعجم اللساني, التداولية, اللسانيات الحاسوبية, علم الأصوات, تحليل الخطاب, مذكرة ماستر لسانيات, اختبارات لسانيات" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <meta name="theme-color" content="#f4f6fb" />
+
+  <!-- وسوم المشاركة الاجتماعية (Open Graph & Twitter) -->
+  <meta property="og:locale" content="ar_AR" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="لِسَان | LISAN" />
+  <meta property="og:title" content="لِسَان | LISAN — الفضاء الرقمي لطلبة اللسانيات العربية" />
+  <meta property="og:description" content="نتعلم اللسانيات، نكتشف نظرياتها، ونطور مهاراتنا البحثية." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="لِسَان | LISAN — الفضاء الرقمي لطلبة اللسانيات العربية" />
+  <meta name="twitter:description" content="نتعلم اللسانيات، نكتشف نظرياتها، ونطور مهاراتنا البحثية." />
+
+  <!-- أيقونة تبويب المتصفح (SVG مدمج بدون ملفات إضافية) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%230071e3'/%3E%3Cstop offset='100%25' stop-color='%235e5ce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700' font-size='34'%3Eل%3C/text%3E%3C/svg%3E" />
+
+  <!-- الخطوط العربية الأكاديمية والعصرية -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- ملف المظهر الزجاجي الفاتح -->
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- البيانات المنظمة لمحركات البحث (Schema.org JSON-LD) -->
+  <script type="application/ld+json" id="dynamic-jsonld">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "لِسَان | LISAN",
+      "alternateName": "LISAN Arabic Linguistics Platform",
+      "description": "الفضاء الرقمي لطلبة اللسانيات العربية — نتعلم اللسانيات، نكتشف نظرياتها، ونطور مهاراتنا البحثية.",
+      "inLanguage": "ar",
+      "audience": {
+        "@type": "EducationalAudience",
+        "educationalRole": "student"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- شريط الإعلانات العلوي المرن (يُدار من لوحة التحكم) -->
+  <div id="app-announcement" class="app-announcement" role="status" hidden></div>
+
+  <!-- الشريط العلوي الزجاجي الثابت -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./" id="brand-home-link" class="brand-link" aria-label="العودة إلى الصفحة الرئيسية لمنصة لسان">
+        <div id="brand-logo-wrap" class="brand-logo-box" aria-hidden="true">ل</div>
+        <div class="brand-texts">
+          <span id="brand-title" class="brand-title">لِسَان | LISAN</span>
+          <span id="brand-subtitle" class="brand-subtitle">الفضاء الرقمي لطلبة اللسانيات العربية</span>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <button type="button" id="header-search-btn" class="icon-glass-btn" aria-label="فتح محرك البحث الذكي">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>بحث ذكي</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- المحتوى الرئيسي مع هيكل دلالي مسبق للفهرسة الطبيعية لعناكب البحث -->
+  <main id="app-main" aria-live="polite">
+    <section class="hero-section container">
+      <div class="glass-hero">
+        <span class="hero-pill">جمهور متخصص: طلبة اللسانيات</span>
+        <h1 class="hero-title">لِسَان | LISAN</h1>
+        <p class="hero-subtitle">الفضاء الرقمي لطلبة اللسانيات العربية</p>
+        <p class="hero-tagline">نتعلم اللسانيات، نكتشف نظرياتها، ونطور مهاراتنا البحثية.</p>
+      </div>
+    </section>
+
+    <section class="container sections-wrapper" aria-label="أقسام منصة لسان">
+      <div class="section-heading-row">
+        <div>
+          <h2 class="section-main-heading">أقسام المنصة</h2>
+          <p class="section-sub-heading">بنية أكاديمية مرتبة لطلبة وباحثي اللسانيات العربية.</p>
+        </div>
+      </div>
+
+      <nav class="sections-grid" aria-label="روابط أقسام المنصة">
+        <article class="glass-card section-box">
+          <h3 class="section-box-title"><a href="?section=library">المكتبة اللسانية</a></h3>
+          <p class="section-box-desc">ملخصات النظريات اللسانية، كتب ومراجع وروابط علمية، ومقالات وأبحاث مختارة.</p>
+        </article>
+        <article class="glass-card section-box">
+          <h3 class="section-box-title"><a href="?section=dictionary">المعجم اللساني</a></h3>
+          <p class="section-box-desc">مصطلحات اللسانيات العامة والتطبيقية والتداولية والحاسوبية مع تعريف مبسط لكل مصطلح.</p>
+        </article>
+        <article class="glass-card section-box">
+          <h3 class="section-box-title"><a href="?section=quiz">اختبر معارفك</a></h3>
+          <p class="section-box-desc">اختبارات في فروع اللسانيات، أسئلة اختيار من متعدد، وتحديات أسبوعية تفاعلية.</p>
+        </article>
+        <article class="glass-card section-box">
+          <h3 class="section-box-title"><a href="?section=research">فضاء الباحث اللساني</a></h3>
+          <p class="section-box-desc">كيفية إعداد مذكرة ماستر، منهجية تحليل المدونة، التوثيق العلمي، وأدوات البحث اللساني.</p>
+        </article>
+        <article class="glass-card section-box">
+          <h3 class="section-box-title"><a href="?section=lectures">محاضرات ودروس</a></h3>
+          <p class="section-box-desc">دروس مختصرة في علم الأصوات، الصرف، النحو، الدلالة، التداولية، وتحليل الخطاب.</p>
+        </article>
+        <article class="glass-card section-box">
+          <h3 class="section-box-title"><a href="?section=exchange">فضاء التبادل العلمي</a></h3>
+          <p class="section-box-desc">عرض مشاريع الطلبة، الإعلان عن الملتقيات، مسابقات علمية، ومشاركة تجارب البحث.</p>
+        </article>
+      </nav>
+    </section>
+  </main>
+
+  <!-- التذييل -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p id="footer-text" class="footer-text">لِسَان | LISAN — الفضاء الرقمي الأكاديمي لطلبة اللسانيات العربية</p>
+      <div id="footer-socials" class="footer-socials" aria-label="روابط التواصل"></div>
+    </div>
+  </footer>
+
+  <!-- نافذة محرك البحث العالمي الذكي (Spotlight Search) -->
+  <div id="global-search-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-label="البحث الذكي في المنصة" hidden>
+    <div class="spotlight-modal">
+      <div class="spotlight-header">
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="search" id="global-search-input" placeholder="ابحث عن كتاب، مصطلح، درس، أو اختبار..." autocomplete="off" />
+        <button type="button" id="close-search-modal" class="tool-btn" aria-label="إغلاق البحث">إغلاق</button>
+      </div>
+      <div id="global-search-results" class="spotlight-results"></div>
+    </div>
+  </div>
+
+  <!-- نافذة التنبيه الآمن عند الانتقال لرابط خارجي -->
+  <div id="external-link-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ext-modal-title" hidden>
+    <div class="dialog-modal">
+      <h3 id="ext-modal-title">أنت على وشك مغادرة منصة لِسَان</h3>
+      <p>سيتم فتح الرابط الخارجي التالي في نافذة جديدة. يرجى التأكد من موثوقية الوجهة قبل المتابعة:</p>
+      <div id="external-link-url" class="external-url-preview"></div>
+      <div class="dialog-actions">
+        <button type="button" id="cancel-external-btn" class="tool-btn">إلغاء</button>
+        <button type="button" id="confirm-external-btn" class="btn-primary-glass">متابعة الانتقال</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة مشاركة مشاريع وتجارب الطلبة (تُرسل للمراجعة في لوحة التحكم) -->
+  <div id="submission-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="sub-modal-title" hidden>
+    <div class="form-modal">
+      <h3 id="sub-modal-title">شارك مشروعك أو تجربتك البحثية</h3>
+      <p style="margin: 0 0 18px; font-size: 0.9rem; color: var(--text-secondary);">ستصل مشاركتك إلى هيئة التحرير لمراجعتها واعتماد نشرها في فضاء التبادل العلمي.</p>
+      <form id="student-submission-form">
+        <div class="form-group">
+          <label for="sub-student-name">الاسم الكامل أو اسم الفريق البحثي</label>
+          <input type="text" id="sub-student-name" required placeholder="مثال: سارة المنصوري — ماستر لسانيات عامة" />
+        </div>
+        <div class="form-group">
+          <label for="sub-branch">التصنيف الفرعي</label>
+          <select id="sub-branch">
+            <option value="عرض مشاريع الطلبة">عرض مشاريع الطلبة</option>
+            <option value="الإعلان عن الملتقيات">الإعلان عن الملتقيات</option>
+            <option value="مسابقات علمية">مسابقات علمية</option>
+            <option value="مشاركة تجارب البحث">مشاركة تجارب البحث</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="sub-title">عنوان المشروع أو المشاركة</label>
+          <input type="text" id="sub-title" required placeholder="اكتب عنواناً أكاديمياً واضحاً..." />
+        </div>
+        <div class="form-group">
+          <label for="sub-details">ملخص وتفاصيل المشاركة</label>
+          <textarea id="sub-details" rows="5" required placeholder="اشرح فكرة المشروع، المنهجية، أو تفاصيل الملتقى..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="sub-link">رابط إضافي أو ملف (اختياري)</label>
+          <input type="url" id="sub-link" dir="ltr" placeholder="https://..." />
+        </div>
+        <div class="dialog-actions">
+          <button type="button" id="close-submission-btn" class="tool-btn">إلغاء</button>
+          <button type="submit" class="btn-primary-glass">إرسال للمراجعة</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- حاوية الإشعارات الزجاجية اللطيفة -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- المحرك الرئيسي للمنصة -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
