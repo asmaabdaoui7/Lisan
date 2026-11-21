@@ -1,9 +1,10 @@
 /**
  * ============================================================================
  * لِسَان | LISAN — الفضاء الرقمي لطلبة اللسانيات العربية
- * المستودع العام — المحرك الرئيسي (app.js)
- * البنية: كشف تدريجي (شيء داخل شيء) + محرك بحث عربي ذكي + SEO ديناميكي
- * + مشغل يوتيوب ذكي (إيقاف تلقائي عند التمرير) + قارئ PDF + معالج روابط آمن
+ * المستودع العام — المحرك الرئيسي المطوّر (app.js) — الإصدار 2.0
+ * الميزات: كشف تدريجي (شيء داخل شيء) + شبكة Bento للجوال + محرك بحث عربي ذكي
+ * + صور حرة بأحجام وشروحات داخل المقال + معاينة مكبّرة (Lightbox)
+ * + وضع القراءة الورقي الدافئ (Sepia) + مشغل يوتيوب ذكي + قارئ PDF + SEO ديناميكي
  * ============================================================================
  */
 
@@ -18,7 +19,6 @@ import {
   updateDoc,
   increment,
   query,
-  where,
   orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -40,7 +40,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* ============================================================================
- * 2. الإعدادات والهيكلة الافتراضية (تُحدّث تلقائياً ولحظياً من لوحة التحكم)
+ * 2. الإعدادات والهيكلة الافتراضية (متزامنة لحظياً مع غرفة العمليات)
  * ============================================================================ */
 const DEFAULT_SETTINGS = {
   siteName: "لِسَان | LISAN",
@@ -52,6 +52,7 @@ const DEFAULT_SETTINGS = {
   footerText: "لِسَان | LISAN — الفضاء الرقمي الأكاديمي لطلبة اللسانيات العربية",
   contactEmail: "",
   themeAccent: "#0071e3",
+  publicBaseUrl: "",
   socialLinks: {
     twitter: "",
     telegram: "",
@@ -68,6 +69,7 @@ const DEFAULT_SETTINGS = {
     sectionExchange: true,
     externalLinkWarning: true,
     fontControls: true,
+    warmPaperMode: true,
     shareButtons: true,
     announcements: true,
     statsBar: true,
@@ -110,7 +112,7 @@ const DEFAULT_SETTINGS = {
       title: "اختبر معارفك",
       shortDesc: "اختبارات تفاعلية في فروع اللسانيات، أسئلة اختيار من متعدد، وتحديات أسبوعية.",
       icon: "check-circle",
-      accent: "#30b0c7",
+      accent: "#0e9aa7",
       branches: [
         "اختبارات في فروع اللسانيات",
         "أسئلة اختيار من متعدد",
@@ -124,7 +126,7 @@ const DEFAULT_SETTINGS = {
       title: "فضاء الباحث اللساني",
       shortDesc: "منهجية إعداد مذكرة الماستر، تحليل المدونة، التوثيق العلمي، وأدوات البحث.",
       icon: "compass",
-      accent: "#ff9500",
+      accent: "#c88a2e",
       branches: [
         "كيفية إعداد مذكرة ماستر",
         "منهجية تحليل المدونة",
@@ -139,7 +141,7 @@ const DEFAULT_SETTINGS = {
       title: "محاضرات ودروس",
       shortDesc: "دروس مختصرة ومرئية في الأصوات، الصرف، النحو، الدلالة، التداولية، وتحليل الخطاب.",
       icon: "play-circle",
-      accent: "#af52de",
+      accent: "#8b5cf6",
       branches: [
         "علم الأصوات",
         "الصرف والنحو",
@@ -154,7 +156,7 @@ const DEFAULT_SETTINGS = {
       title: "فضاء التبادل العلمي",
       shortDesc: "عرض مشاريع الطلبة، الإعلان عن الملتقيات، المسابقات العلمية، وتجارب البحث.",
       icon: "users",
-      accent: "#34c759",
+      accent: "#16a34a",
       branches: [
         "عرض مشاريع الطلبة",
         "الإعلان عن الملتقيات",
@@ -166,8 +168,7 @@ const DEFAULT_SETTINGS = {
 };
 
 /* ============================================================================
- * 3. بيانات أولية تأسيسية (تظهر فقط إذا كانت قاعدة البيانات فارغة تماماً)
- *    تختفي تلقائياً بمجرد إضافة أول محتوى من لوحة التحكم
+ * 3. بيانات أولية تأسيسية (تختفي تلقائياً عند نشر أول مادة من غرفة العمليات)
  * ============================================================================ */
 const FALLBACK_ITEMS = [
   {
@@ -188,7 +189,7 @@ const FALLBACK_ITEMS = [
         <li><strong>الدال والمدلول (Signifiant / Signifié):</strong> العلاقة الاعتباطية بين الصورة السمعية والتصور الذهني.</li>
         <li><strong>التزامنية والتعاقبية (Synchronie / Diachronie):</strong> دراسة بنية اللغة في لحظة زمنية محددة مقابل تتبع تطورها عبر الزمن.</li>
       </ul>
-      <p>للاطلاع على مزيد من المراجع المعجمية التاريخية يمكن زيارة موقع معجم الدوحة التاريخي: https://www.dohadictionary.org</p>
+      <p>للاطلاع على مراجع معجمية تاريخية يمكن زيارة معجم الدوحة التاريخي: https://www.dohadictionary.org</p>
     `,
     pdfUrl: "",
     youtubeUrl: "",
@@ -296,7 +297,6 @@ const FALLBACK_QUIZZES = [
     title: "اختبار تأسيسي في مفاهيم اللسانيات العامة",
     description: "قيّم استيعابك لأبرز المفاهيم التأسيسية في المدارس اللسانية الحديثة مع شرح علمي فوري لكل إجابة.",
     difficulty: "مبتدئ",
-    timeLimitMinutes: 5,
     status: "published",
     isDemo: true,
     questions: [
@@ -323,7 +323,7 @@ const FALLBACK_QUIZZES = [
 ];
 
 /* ============================================================================
- * 4. الحالة المركزية للتطبيق (Application State)
+ * 4. الحالة المركزية للتطبيق (State)
  * ============================================================================ */
 const state = {
   settings: structuredClone(DEFAULT_SETTINGS),
@@ -333,14 +333,15 @@ const state = {
   usingFallbackQuizzes: false,
   loading: true,
   route: {
-    view: "home", // 'home' | 'section' | 'item' | 'quiz'
+    view: "home",
     sectionId: null,
     branch: "الكل",
     itemId: null,
     quizId: null,
     searchQuery: ""
   },
-  readerFontSize: 18,
+  readerFontSize: Number(localStorage.getItem("lisan_font_size") || 18),
+  warmPaperActive: localStorage.getItem("lisan_warm_paper") === "1",
   activeQuizSession: null,
   videoObserver: null,
   pendingExternalUrl: null
@@ -366,7 +367,8 @@ const ICONS = {
   sparkles: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
   eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
-  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  paper: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`
 };
 
 /* ============================================================================
@@ -375,7 +377,7 @@ const ICONS = {
 function normalizeArabic(text = "") {
   return String(text)
     .toLowerCase()
-    .replace(/[\u064B-\u065F\u0670\u0640]/g, "") // إزالة التشكيل والتطويل
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
     .replace(/[أإآٱ]/g, "ا")
     .replace(/ة/g, "ه")
     .replace(/ى/g, "ي")
@@ -410,7 +412,6 @@ function smartSearchItems(queryText, list, extraFieldsFn = null) {
       const matchedAll = tokens.every((tk) => fullHaystack.includes(tk));
       if (!matchedAll) return null;
 
-      // ترتيب ذكي بالأولوية (العنوان ثم الفرع ثم الملخص ثم المتن)
       let score = 0;
       if (titleNorm.includes(normQuery)) score += 100;
       tokens.forEach((tk) => {
@@ -429,7 +430,7 @@ function smartSearchItems(queryText, list, extraFieldsFn = null) {
 }
 
 /* ============================================================================
- * 7. الأدوات الأمنية ومعالجة النصوص والروابط والوسائط الذكية
+ * 7. الأدوات الأمنية ومعالجة النصوص والصور الحرة والروابط والوسائط
  * ============================================================================ */
 function escapeHtml(str = "") {
   return String(str)
@@ -441,19 +442,23 @@ function escapeHtml(str = "") {
 }
 
 /**
- * تنقية النصوص الأكاديمية القادمة من المحرر + تحويل الروابط العشوائية تلقائياً
+ * تنقية النصوص الأكاديمية + دعم الصور الحرة بأحجامها وشروحاتها + التعرف التلقائي على الروابط
  */
 function sanitizeAndLinkifyHtml(rawHtml = "") {
   const allowedTags = new Set([
     "H1", "H2", "H3", "H4", "P", "BR", "STRONG", "B", "EM", "I", "U",
-    "BLOCKQUOTE", "UL", "OL", "LI", "A", "IMG", "HR", "SPAN", "MARK",
-    "SUP", "SUB", "CODE", "PRE", "TABLE", "THEAD", "TBODY", "TR", "TH", "TD", "DIV"
+    "BLOCKQUOTE", "UL", "OL", "LI", "A", "IMG", "FIGURE", "FIGCAPTION",
+    "HR", "SPAN", "MARK", "SUP", "SUB", "CODE", "PRE",
+    "TABLE", "THEAD", "TBODY", "TR", "TH", "TD", "DIV"
+  ]);
+
+  const safeClasses = new Set([
+    "academic-figure", "academic-inline-img", "img-size-sm", "img-size-md", "img-size-full"
   ]);
 
   const template = document.createElement("template");
   template.innerHTML = rawHtml || "";
 
-  // إزالة أي وسوم خطيرة أو سمات أحداث
   const walkClean = (node) => {
     const children = Array.from(node.childNodes);
     for (const child of children) {
@@ -463,22 +468,27 @@ function sanitizeAndLinkifyHtml(rawHtml = "") {
             child.remove();
             continue;
           }
-          // فك الوسم غير المصرح مع الإبقاء على نصه
           const frag = document.createDocumentFragment();
           while (child.firstChild) frag.appendChild(child.firstChild);
           child.replaceWith(frag);
           continue;
         }
-        // تنظيف السمات
+
+        // الاحتفاظ فقط بالكلاسات المعتمدة لأحجام الصور والشكل الأكاديمي
+        const keptClasses = Array.from(child.classList).filter((c) => safeClasses.has(c));
         for (const attr of Array.from(child.attributes)) {
           const name = attr.name.toLowerCase();
           const val = attr.value.trim();
-          if (name.startsWith("on") || name === "style") {
+          if (name.startsWith("on") || name === "style" || name === "contenteditable") {
             child.removeAttribute(attr.name);
           } else if ((name === "href" || name === "src") && /^javascript:/i.test(val)) {
             child.removeAttribute(attr.name);
+          } else if (name === "class") {
+            child.removeAttribute("class");
           }
         }
+        keptClasses.forEach((c) => child.classList.add(c));
+
         if (child.tagName === "A") {
           child.setAttribute("target", "_blank");
           child.setAttribute("rel", "noopener noreferrer");
@@ -486,7 +496,10 @@ function sanitizeAndLinkifyHtml(rawHtml = "") {
         }
         if (child.tagName === "IMG") {
           child.setAttribute("loading", "lazy");
-          child.classList.add("academic-inline-img");
+          child.classList.add("academic-inline-img", "zoomable-img");
+        }
+        if (child.tagName === "FIGURE") {
+          child.classList.add("academic-figure");
         }
         walkClean(child);
       }
@@ -494,18 +507,14 @@ function sanitizeAndLinkifyHtml(rawHtml = "") {
   };
   walkClean(template.content);
 
-  // التعرف التلقائي الذكي على الروابط العشوائية داخل النصوص وتحويلها لروابط تفاعلية
+  // التعرف التلقائي الذكي على الروابط العشوائية داخل النصوص
   const urlRegex = /((?:https?:\/\/|www\.)[^\s<>"'()]+)/gi;
   const textNodes = [];
   const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_TEXT);
   let currentNode;
   while ((currentNode = walker.nextNode())) {
-    if (currentNode.parentElement && currentNode.parentElement.closest("a, code, pre")) {
-      continue;
-    }
-    if (urlRegex.test(currentNode.nodeValue)) {
-      textNodes.push(currentNode);
-    }
+    if (currentNode.parentElement && currentNode.parentElement.closest("a, code, pre")) continue;
+    if (urlRegex.test(currentNode.nodeValue)) textNodes.push(currentNode);
     urlRegex.lastIndex = 0;
   }
 
@@ -517,7 +526,6 @@ function sanitizeAndLinkifyHtml(rawHtml = "") {
       if (offset > lastIndex) {
         frag.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
       }
-      // إزالة علامات الترقيم العالقة بآخر الرابط
       let cleanUrl = match;
       let trailing = "";
       while (/[.,،؛:!?)}\]]$/.test(cleanUrl)) {
@@ -546,9 +554,6 @@ function sanitizeAndLinkifyHtml(rawHtml = "") {
   return wrapper.innerHTML;
 }
 
-/**
- * استخراج معرّف فيديو يوتيوب من أي صيغة رابط (عادي، Shorts، مختصر، مضمّن)
- */
 function extractYouTubeId(url = "") {
   if (!url) return null;
   const patterns = [
@@ -562,9 +567,6 @@ function extractYouTubeId(url = "") {
   return null;
 }
 
-/**
- * تحويل روابط Google Drive أو PDF إلى رابط عرض احترافي مدمج
- */
 function buildPdfEmbedUrl(url = "") {
   if (!url) return null;
   const driveFile = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
@@ -642,7 +644,6 @@ function updateSEO({ title, description, image, type = "website", schemaData = n
   }
   canonical.href = currentUrl;
 
-  // تحديث بيانات Schema.org المنظمة لعناكب جوجل
   const ldScript = document.getElementById("dynamic-jsonld");
   if (ldScript) {
     const baseSchema = schemaData || {
@@ -658,7 +659,7 @@ function updateSEO({ title, description, image, type = "website", schemaData = n
 }
 
 /* ============================================================================
- * 9. جلب البيانات من Firestore (مع دمج ذكي مع الإعدادات الافتراضية)
+ * 9. جلب البيانات من Firestore والمزامنة اللحظية مع غرفة العمليات
  * ============================================================================ */
 function deepMergeSettings(remote = {}) {
   const merged = structuredClone(DEFAULT_SETTINGS);
@@ -739,45 +740,49 @@ async function loadPlatformData() {
 }
 
 /* ============================================================================
- * 10. تطبيق الهوية العامة والمفاتيح (Feature Flags) على الغلاف الثابت
+ * 10. تطبيق الهوية، الشعار، الأيقونة، الألوان، ومفاتيح الميزات
  * ============================================================================ */
 function applyGlobalShell() {
   const s = state.settings;
   const f = s.features;
 
-  // لون التمييز المرن من لوحة التحكم
+  // مزامنة اللون الأساسي في كل الهالات والعناصر
   if (s.themeAccent) {
     document.documentElement.style.setProperty("--accent", s.themeAccent);
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.setAttribute("content", s.themeAccent);
   }
 
-  // الهوية في الشريط العلوي
+  // مزامنة الاسم والشعار وأيقونة المتصفح (Favicon)
   const brandTitle = document.getElementById("brand-title");
   const brandSub = document.getElementById("brand-subtitle");
   const logoWrap = document.getElementById("brand-logo-wrap");
   if (brandTitle) brandTitle.textContent = s.siteName;
   if (brandSub) brandSub.textContent = s.siteSubtitle;
-  if (logoWrap && s.logoUrl) {
-    logoWrap.innerHTML = `<img src="${escapeHtml(s.logoUrl)}" alt="${escapeHtml(s.siteName)}" class="brand-logo-img" />`;
+
+  if (logoWrap) {
+    if (s.logoUrl) {
+      logoWrap.innerHTML = `<img src="${escapeHtml(s.logoUrl)}" alt="${escapeHtml(s.siteName)}" class="brand-logo-img" />`;
+      const fav = document.querySelector('link[rel="icon"]');
+      if (fav) fav.setAttribute("href", s.logoUrl);
+    } else {
+      logoWrap.textContent = (s.siteName || "ل").trim()[0] || "ل";
+    }
   }
 
-  // زر البحث العالمي (مربوط بمفتاح التحكم من لوحة التحكم)
   const searchBtn = document.getElementById("header-search-btn");
-  if (searchBtn) {
-    searchBtn.style.display = f.globalSearch ? "" : "none";
-  }
+  if (searchBtn) searchBtn.style.display = f.globalSearch ? "" : "none";
 
-  // شريط الإعلانات العلوي (اختياري)
   const annBar = document.getElementById("app-announcement");
   if (annBar) {
     if (f.announcements && s.announcementText && s.announcementText.trim()) {
-      annBar.innerHTML = `<div class="container announcement-inner"><span>${escapeHtml(s.announcementText)}</span></div>`;
+      annBar.innerHTML = `<div class="container announcement-inner"><span class="ann-ornament">❖</span><span>${escapeHtml(s.announcementText)}</span></div>`;
       annBar.hidden = false;
     } else {
       annBar.hidden = true;
     }
   }
 
-  // التذييل وروابط التواصل
   const footerText = document.getElementById("footer-text");
   if (footerText) footerText.textContent = s.footerText;
 
@@ -803,7 +808,7 @@ function applyGlobalShell() {
 }
 
 /* ============================================================================
- * 11. نظام التوجيه النظيف (Clean URL Routing قابل للفهرسة من جوجل)
+ * 11. التوجيه النظيف القابل للفهرسة
  * ============================================================================ */
 function parseRouteFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -853,7 +858,7 @@ function navigateTo(routeUpdate, push = true) {
 }
 
 /* ============================================================================
- * 12. العرض الرئيسي حسب المسار (الكشف التدريجي — صفر ازدحام)
+ * 12. العرض الرئيسي (الحداثة الأصيلة + الشبكة المتناسقة Bento Grid)
  * ============================================================================ */
 function getEnabledSections() {
   return Object.values(state.settings.sectionsMeta)
@@ -896,7 +901,7 @@ function renderCurrentView() {
   }
 }
 
-/* ---------- 12.1 الواجهة الرئيسية (النظيفة — 6 صناديق مرتبة) ---------- */
+/* ---------- 12.1 الواجهة الرئيسية (النظيفة — شبكة Bento المتناسقة) ---------- */
 function renderHomeView(container) {
   const s = state.settings;
   const f = s.features;
@@ -905,6 +910,7 @@ function renderHomeView(container) {
   updateSEO({
     title: "",
     description: `${s.siteSubtitle} — ${s.siteTagline}`,
+    image: s.logoUrl || "",
     type: "website"
   });
 
@@ -912,7 +918,8 @@ function renderHomeView(container) {
 
   container.innerHTML = `
     <section class="hero-section container">
-      <div class="glass-hero">
+      <div class="glass-hero heritage-frame">
+        <div class="hero-ornament-line" aria-hidden="true"><span>✦</span></div>
         <span class="hero-pill">${ICONS.sparkles} ${escapeHtml(s.audienceBadge)}</span>
         <h1 class="hero-title">${escapeHtml(s.siteName)}</h1>
         <p class="hero-subtitle">${escapeHtml(s.siteSubtitle)}</p>
@@ -922,7 +929,7 @@ function renderHomeView(container) {
           <div class="hero-search-trigger-wrap">
             <button type="button" class="hero-search-bar" id="hero-open-search" aria-label="البحث الذكي في المنصة">
               <span class="search-icon">${ICONS.search}</span>
-              <span class="search-placeholder">ابحث بذكاء في الكتب، المصطلحات، المحاضرات، والأبحاث...</span>
+              <span class="search-placeholder">ابحث بذكاء في الكتب، المصطلحات، المحاضرات...</span>
               <kbd class="search-kbd">/</kbd>
             </button>
           </div>
@@ -930,9 +937,9 @@ function renderHomeView(container) {
 
         ${f.statsBar ? `
           <div class="hero-stats">
-            <div class="stat-pill"><strong>${sections.length}</strong><span>أقسام متخصصة</span></div>
-            <div class="stat-pill"><strong>${totalResources}</strong><span>مادة ومعرفة لسانية</span></div>
-            <div class="stat-pill"><strong>${state.quizzes.length}</strong><span>اختبارات تفاعلية</span></div>
+            <div class="stat-pill"><strong>${sections.length}</strong><span>أقسام</span></div>
+            <div class="stat-pill"><strong>${totalResources}</strong><span>مادة لسانية</span></div>
+            <div class="stat-pill"><strong>${state.quizzes.length}</strong><span>اختبارات</span></div>
           </div>
         ` : ""}
       </div>
@@ -942,30 +949,32 @@ function renderHomeView(container) {
       <div class="section-heading-row">
         <div>
           <h2 class="section-main-heading">أقسام المنصة</h2>
-          <p class="section-sub-heading">اختر القِسم للدخول إلى فروعه ومواده المرتبة بهدوء.</p>
+          <p class="section-sub-heading">بنية معرفية مرتّبة — افتح القسم لاستكشاف فروعه بهدوء.</p>
         </div>
       </div>
 
       <div class="sections-grid">
-        ${sections.map((sec) => {
+        ${sections.map((sec, idx) => {
           const count = countItemsInSection(sec.id);
-          const branchesPreview = (sec.branches || []).slice(0, 3);
+          const branchesPreview = (sec.branches || []).slice(0, 2);
           return `
-            <article class="glass-card section-box" data-open-section="${sec.id}" tabindex="0" role="button" aria-label="فتح قسم ${escapeHtml(sec.title)}">
+            <article class="glass-card section-box heritage-card stagger-in"
+              style="--stagger: ${idx}; --sec-accent: ${sec.accent || '#0071e3'}"
+              data-open-section="${sec.id}" tabindex="0" role="button" aria-label="فتح قسم ${escapeHtml(sec.title)}">
               <div class="section-box-top">
                 <div class="section-icon-badge" style="--sec-accent: ${sec.accent || '#0071e3'}">
                   ${ICONS[sec.icon] || ICONS.book}
                 </div>
-                <span class="section-count-badge">${count} مادة</span>
+                <span class="section-count-badge">${count}</span>
               </div>
               <h3 class="section-box-title">${escapeHtml(sec.title)}</h3>
               <p class="section-box-desc">${escapeHtml(sec.shortDesc)}</p>
               <div class="section-mini-branches">
                 ${branchesPreview.map((b) => `<span class="mini-branch-chip">${escapeHtml(b)}</span>`).join("")}
-                ${(sec.branches || []).length > 3 ? `<span class="mini-branch-chip more">+${sec.branches.length - 3}</span>` : ""}
+                ${(sec.branches || []).length > 2 ? `<span class="mini-branch-chip more">+${sec.branches.length - 2}</span>` : ""}
               </div>
               <div class="section-box-footer">
-                <span>استكشاف القسم</span>
+                <span>استكشاف</span>
                 <span class="arrow-icon">${ICONS.arrowLeft}</span>
               </div>
             </article>
@@ -975,7 +984,6 @@ function renderHomeView(container) {
     </section>
   `;
 
-  // ربط النقر على بطاقات الأقسام
   container.querySelectorAll("[data-open-section]").forEach((card) => {
     const open = () => navigateTo({ view: "section", sectionId: card.dataset.openSection, branch: "الكل" });
     card.addEventListener("click", open);
@@ -987,11 +995,10 @@ function renderHomeView(container) {
     });
   });
 
-  const heroSearch = document.getElementById("hero-open-search");
-  if (heroSearch) heroSearch.addEventListener("click", openGlobalSearchModal);
+  document.getElementById("hero-open-search")?.addEventListener("click", openGlobalSearchModal);
 }
 
-/* ---------- 12.2 واجهة القسم الداخلي (الكرتون المفتوح + الفروع + بحث القسم) ---------- */
+/* ---------- 12.2 واجهة القسم الداخلي (الكرتون المفتوح + شبكة متناسقة) ---------- */
 function renderSectionView(container, sectionId) {
   const sec = state.settings.sectionsMeta[sectionId];
   if (!sec || state.settings.features[sec.featureKey] === false) {
@@ -1027,7 +1034,7 @@ function renderSectionView(container, sectionId) {
         <span class="crumb-current">${escapeHtml(sec.title)}</span>
       </nav>
 
-      <header class="glass-card section-banner" style="--sec-accent: ${sec.accent || '#0071e3'}">
+      <header class="glass-card section-banner heritage-frame" style="--sec-accent: ${sec.accent || '#0071e3'}">
         <div class="section-banner-content">
           <div class="section-icon-badge large">${ICONS[sec.icon] || ICONS.book}</div>
           <div>
@@ -1081,22 +1088,15 @@ function renderSectionView(container, sectionId) {
 
     if (isQuizSection) {
       let list = state.quizzes;
-      if (state.route.branch !== "الكل") {
-        list = list.filter((x) => x.branch === state.route.branch);
-      }
+      if (state.route.branch !== "الكل") list = list.filter((x) => x.branch === state.route.branch);
       list = smartSearchItems(q, list);
       renderQuizzesGrid(grid, list);
     } else {
       let list = state.items.filter((it) => it.sectionId === sectionId);
-      if (state.route.branch !== "الكل") {
-        list = list.filter((it) => it.branch === state.route.branch);
-      }
+      if (state.route.branch !== "الكل") list = list.filter((it) => it.branch === state.route.branch);
       list = smartSearchItems(q, list);
-      if (isDictionary) {
-        renderDictionaryList(grid, list);
-      } else {
-        renderItemsCardsGrid(grid, list, sec);
-      }
+      if (isDictionary) renderDictionaryList(grid, list);
+      else renderItemsCardsGrid(grid, list, sec);
     }
   };
 
@@ -1105,7 +1105,6 @@ function renderSectionView(container, sectionId) {
       container.querySelectorAll(".branch-tab").forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
       state.route.branch = tab.dataset.branch;
-      // تحديث الرابط بدون إعادة رسم الصفحة بالكامل
       const params = new URLSearchParams({ section: sectionId });
       if (state.route.branch !== "الكل") params.set("branch", state.route.branch);
       window.history.replaceState({ ...state.route }, "", `${window.location.pathname}?${params.toString()}`);
@@ -1119,18 +1118,17 @@ function renderSectionView(container, sectionId) {
 
 function renderItemsCardsGrid(grid, list, sec) {
   if (!list.length) {
-    grid.innerHTML = `
-      <div class="glass-card empty-state">
-        <p>لا توجد مواد مطابقة في هذا الفرع حالياً.</p>
-      </div>`;
+    grid.innerHTML = `<div class="glass-card empty-state"><p>لا توجد مواد مطابقة في هذا الفرع حالياً.</p></div>`;
     return;
   }
 
-  grid.innerHTML = list.map((item) => {
+  grid.innerHTML = list.map((item, idx) => {
     const hasVideo = Boolean(extractYouTubeId(item.youtubeUrl));
     const hasPdf = Boolean(item.pdfUrl);
     return `
-      <article class="glass-card content-card" data-open-item="${escapeHtml(item.id)}" tabindex="0" role="button">
+      <article class="glass-card content-card heritage-card stagger-in"
+        style="--stagger: ${Math.min(idx, 10)}"
+        data-open-item="${escapeHtml(item.id)}" tabindex="0" role="button">
         ${item.coverUrl ? `
           <div class="content-card-media">
             <img src="${escapeHtml(item.coverUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" />
@@ -1146,10 +1144,10 @@ function renderItemsCardsGrid(grid, list, sec) {
           </div>
           <h3 class="content-card-title">${escapeHtml(item.title)}</h3>
           ${item.subtitle ? `<p class="content-card-sub">${escapeHtml(item.subtitle)}</p>` : ""}
-          <p class="content-card-summary">${escapeHtml(item.summary || stripHtml(item.bodyHtml).slice(0, 140))}</p>
+          <p class="content-card-summary">${escapeHtml(item.summary || stripHtml(item.bodyHtml).slice(0, 120))}</p>
           <div class="content-card-footer">
             <span class="meta-stat">${ICONS.eye} ${item.views || 0}</span>
-            <span class="read-more-link">قراءة وفتح ${ICONS.arrowLeft}</span>
+            <span class="read-more-link">قراءة ${ICONS.arrowLeft}</span>
           </div>
         </div>
       </article>
@@ -1157,17 +1155,10 @@ function renderItemsCardsGrid(grid, list, sec) {
   }).join("");
 
   grid.querySelectorAll("[data-open-item]").forEach((card) => {
-    const open = () => navigateTo({
-      view: "item",
-      sectionId: sec.id,
-      itemId: card.dataset.openItem
-    });
+    const open = () => navigateTo({ view: "item", sectionId: sec.id, itemId: card.dataset.openItem });
     card.addEventListener("click", open);
     card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        open();
-      }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
     });
   });
 }
@@ -1178,8 +1169,10 @@ function renderDictionaryList(grid, list) {
     return;
   }
 
-  grid.innerHTML = list.map((term) => `
-    <article class="glass-card term-card" data-open-item="${escapeHtml(term.id)}" tabindex="0" role="button">
+  grid.innerHTML = list.map((term, idx) => `
+    <article class="glass-card term-card heritage-card stagger-in"
+      style="--stagger: ${Math.min(idx, 10)}"
+      data-open-item="${escapeHtml(term.id)}" tabindex="0" role="button">
       <div class="term-card-header">
         <div>
           <h3 class="term-title">${escapeHtml(term.title)}</h3>
@@ -1187,12 +1180,12 @@ function renderDictionaryList(grid, list) {
         </div>
         <span class="branch-badge">${escapeHtml(term.branch || "معجم")}</span>
       </div>
-      <p class="term-brief">${escapeHtml(term.summary || stripHtml(term.bodyHtml).slice(0, 180))}</p>
+      <p class="term-brief">${escapeHtml(term.summary || stripHtml(term.bodyHtml).slice(0, 150))}</p>
       <div class="term-footer">
         <div class="tags-inline">
-          ${(term.tags || []).slice(0, 3).map((tg) => `<span class="tag-chip">#${escapeHtml(tg)}</span>`).join("")}
+          ${(term.tags || []).slice(0, 2).map((tg) => `<span class="tag-chip">#${escapeHtml(tg)}</span>`).join("")}
         </div>
-        <span class="read-more-link">التفاصيل الكاملة ${ICONS.arrowLeft}</span>
+        <span class="read-more-link">التفاصيل ${ICONS.arrowLeft}</span>
       </div>
     </article>
   `).join("");
@@ -1201,10 +1194,7 @@ function renderDictionaryList(grid, list) {
     const open = () => navigateTo({ view: "item", sectionId: "dictionary", itemId: card.dataset.openItem });
     card.addEventListener("click", open);
     card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        open();
-      }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
     });
   });
 }
@@ -1215,8 +1205,10 @@ function renderQuizzesGrid(grid, list) {
     return;
   }
 
-  grid.innerHTML = list.map((q) => `
-    <article class="glass-card quiz-card" data-open-quiz="${escapeHtml(q.id)}" tabindex="0" role="button">
+  grid.innerHTML = list.map((q, idx) => `
+    <article class="glass-card quiz-card heritage-card stagger-in"
+      style="--stagger: ${Math.min(idx, 10)}"
+      data-open-quiz="${escapeHtml(q.id)}" tabindex="0" role="button">
       <div class="card-meta-row">
         <span class="branch-badge">${escapeHtml(q.branch || "اختبار")}</span>
         <span class="difficulty-pill">${escapeHtml(q.difficulty || "متوسط")}</span>
@@ -1225,7 +1217,7 @@ function renderQuizzesGrid(grid, list) {
       <p class="content-card-summary">${escapeHtml(q.description || "")}</p>
       <div class="content-card-footer">
         <span class="meta-stat">${(q.questions || []).length} أسئلة</span>
-        <span class="read-more-link">بدء الاختبار ${ICONS.arrowLeft}</span>
+        <span class="read-more-link">ابدأ ${ICONS.arrowLeft}</span>
       </div>
     </article>
   `).join("");
@@ -1234,15 +1226,12 @@ function renderQuizzesGrid(grid, list) {
     const open = () => navigateTo({ view: "quiz", sectionId: "quiz", quizId: card.dataset.openQuiz });
     card.addEventListener("click", open);
     card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        open();
-      }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
     });
   });
 }
 
-/* ---------- 12.3 صفحة القراءة الأكاديمية الفخمة + يوتيوب الذكي + عارض PDF ---------- */
+/* ---------- 12.3 صفحة القراءة الأكاديمية + وضع الورق الدافئ + Lightbox ---------- */
 function renderItemDetailView(container, itemId) {
   const item = state.items.find((x) => x.id === itemId);
   if (!item) {
@@ -1263,8 +1252,8 @@ function renderItemDetailView(container, itemId) {
   const pdfEmbed = buildPdfEmbedUrl(item.pdfUrl);
   const readMins = estimateReadingMinutes(item.bodyHtml);
   const safeHtml = sanitizeAndLinkifyHtml(item.bodyHtml || "");
+  const isWarm = f.warmPaperMode && state.warmPaperActive;
 
-  // زيادة عداد المشاهدات بهدوء (مرة واحدة في الجلسة)
   if (!item.isDemo) {
     const viewKey = `lisan_viewed_${item.id}`;
     if (!sessionStorage.getItem(viewKey)) {
@@ -1277,7 +1266,7 @@ function renderItemDetailView(container, itemId) {
   updateSEO({
     title: item.title,
     description: item.summary || stripHtml(item.bodyHtml).slice(0, 155),
-    image: item.coverUrl || "",
+    image: item.coverUrl || state.settings.logoUrl || "",
     type: "article",
     schemaData: {
       "@context": "https://schema.org",
@@ -1300,7 +1289,7 @@ function renderItemDetailView(container, itemId) {
         <span class="crumb-current">${escapeHtml(item.branch || "")}</span>
       </nav>
 
-      <div class="glass-card reader-shell">
+      <div class="glass-card reader-shell heritage-frame ${isWarm ? "warm-paper" : ""}" id="reader-shell-card">
         <header class="reader-header">
           <div class="reader-top-badges">
             <span class="branch-badge">${escapeHtml(item.branch || sec.title)}</span>
@@ -1314,22 +1303,29 @@ function renderItemDetailView(container, itemId) {
           ${item.summary ? `<p class="reader-lead">${escapeHtml(item.summary)}</p>` : ""}
 
           <div class="reader-toolbar">
-            ${f.fontControls ? `
-              <div class="font-controls" aria-label="التحكم بحجم الخط">
-                <button type="button" class="tool-btn" id="font-dec" title="تصغير الخط">A-</button>
-                <span class="font-size-label" id="font-size-val">${state.readerFontSize}px</span>
-                <button type="button" class="tool-btn" id="font-inc" title="تكبير الخط">A+</button>
-              </div>
-            ` : ""}
+            <div class="toolbar-cluster">
+              ${f.fontControls ? `
+                <div class="font-controls" aria-label="التحكم بحجم الخط">
+                  <button type="button" class="tool-btn" id="font-dec" title="تصغير الخط">A-</button>
+                  <span class="font-size-label" id="font-size-val">${state.readerFontSize}px</span>
+                  <button type="button" class="tool-btn" id="font-inc" title="تكبير الخط">A+</button>
+                </div>
+              ` : ""}
+              ${f.warmPaperMode ? `
+                <button type="button" class="tool-btn ${isWarm ? "active-toggle" : ""}" id="warm-paper-btn" title="وضع الورق الدافئ للقراءة الطويلة">
+                  ${ICONS.paper} <span>ورق دافئ</span>
+                </button>
+              ` : ""}
+            </div>
             ${f.shareButtons ? `
-              <button type="button" class="tool-btn" id="share-item-btn">${ICONS.share} مشاركة الرابط</button>
+              <button type="button" class="tool-btn" id="share-item-btn">${ICONS.share} مشاركة</button>
             ` : ""}
           </div>
         </header>
 
         ${item.coverUrl ? `
           <figure class="reader-cover">
-            <img src="${escapeHtml(item.coverUrl)}" alt="${escapeHtml(item.title)}" />
+            <img src="${escapeHtml(item.coverUrl)}" alt="${escapeHtml(item.title)}" class="zoomable-img" />
           </figure>
         ` : ""}
 
@@ -1366,7 +1362,7 @@ function renderItemDetailView(container, itemId) {
               <div class="pdf-title-wrap">${ICONS.pdf} <strong>الوثيقة المرفقة (قارئ PDF)</strong></div>
               <div class="pdf-actions">
                 <a href="${escapeHtml(item.pdfUrl)}" target="_blank" rel="noopener noreferrer" class="tool-btn lisan-auto-link">
-                  ${ICONS.external} فتح في نافذة مستقلة
+                  ${ICONS.external} فتح مستقل
                 </a>
               </div>
             </div>
@@ -1402,21 +1398,42 @@ function renderItemDetailView(container, itemId) {
     navigateTo({ view: "section", sectionId: sec.id, branch: "الكل" });
   });
 
-  // أزرار التحكم بحجم الخط الأكاديمي
+  // حجم الخط + حفظ التفضيل
   const prose = document.getElementById("academic-prose-body");
   const sizeVal = document.getElementById("font-size-val");
   document.getElementById("font-inc")?.addEventListener("click", () => {
     state.readerFontSize = Math.min(26, state.readerFontSize + 2);
+    localStorage.setItem("lisan_font_size", String(state.readerFontSize));
     if (prose) prose.style.fontSize = `${state.readerFontSize}px`;
     if (sizeVal) sizeVal.textContent = `${state.readerFontSize}px`;
   });
   document.getElementById("font-dec")?.addEventListener("click", () => {
     state.readerFontSize = Math.max(14, state.readerFontSize - 2);
+    localStorage.setItem("lisan_font_size", String(state.readerFontSize));
     if (prose) prose.style.fontSize = `${state.readerFontSize}px`;
     if (sizeVal) sizeVal.textContent = `${state.readerFontSize}px`;
   });
 
-  // زر المشاركة
+  // تبديل وضع القراءة الورقي الدافئ (Sepia)
+  const warmBtn = document.getElementById("warm-paper-btn");
+  const shellCard = document.getElementById("reader-shell-card");
+  warmBtn?.addEventListener("click", () => {
+    state.warmPaperActive = !state.warmPaperActive;
+    localStorage.setItem("lisan_warm_paper", state.warmPaperActive ? "1" : "0");
+    shellCard?.classList.toggle("warm-paper", state.warmPaperActive);
+    warmBtn.classList.toggle("active-toggle", state.warmPaperActive);
+  });
+
+  // معاينة مكبّرة لأي صورة داخل المقال أو الغلاف (Lightbox)
+  shellCard?.querySelectorAll(".zoomable-img").forEach((img) => {
+    img.addEventListener("click", () => {
+      const fig = img.closest("figure");
+      const cap = fig?.querySelector("figcaption")?.textContent || img.alt || "";
+      openLightbox(img.src, cap);
+    });
+  });
+
+  // مشاركة الرابط
   document.getElementById("share-item-btn")?.addEventListener("click", async () => {
     const shareData = { title: item.title, text: item.summary || item.title, url: window.location.href };
     if (navigator.share) {
@@ -1430,10 +1447,30 @@ function renderItemDetailView(container, itemId) {
     }
   });
 
-  // تفعيل مشغل يوتيوب الذكي (أزرار + إيقاف تلقائي عند التمرير)
-  if (ytId) {
-    setupSmartYouTubePlayers(container);
+  if (ytId) setupSmartYouTubePlayers(container);
+}
+
+/* ---------- عارض الصور المكبّر (Image Lightbox) ---------- */
+function openLightbox(src, caption = "") {
+  const modal = document.getElementById("image-lightbox-modal");
+  const imgEl = document.getElementById("lightbox-img");
+  const capEl = document.getElementById("lightbox-caption");
+  if (!modal || !imgEl) return;
+  imgEl.src = src;
+  imgEl.alt = caption;
+  if (capEl) {
+    capEl.textContent = caption;
+    capEl.hidden = !caption.trim();
   }
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+  const modal = document.getElementById("image-lightbox-modal");
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = "";
 }
 
 /* ============================================================================
@@ -1441,10 +1478,7 @@ function renderItemDetailView(container, itemId) {
  * ============================================================================ */
 function sendYouTubeCommand(iframe, func) {
   if (!iframe || !iframe.contentWindow) return;
-  iframe.contentWindow.postMessage(
-    JSON.stringify({ event: "command", func, args: "" }),
-    "*"
-  );
+  iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func, args: "" }), "*");
 }
 
 function cleanupVideoObserver() {
@@ -1502,13 +1536,7 @@ function renderQuizPlayerView(container, quizId) {
     description: quiz.description || "اختبار تفاعلي في اللسانيات العربية"
   });
 
-  state.activeQuizSession = {
-    quiz,
-    index: 0,
-    answers: [], // { selected, correct }
-    locked: false
-  };
-
+  state.activeQuizSession = { quiz, index: 0, answers: [], locked: false };
   renderQuizStep(container);
 }
 
@@ -1517,7 +1545,6 @@ function renderQuizStep(container) {
   const { quiz, index } = session;
   const total = quiz.questions.length;
 
-  // شاشة النتيجة النهائية
   if (index >= total) {
     const score = session.answers.filter((a) => a.correct).length;
     const pct = Math.round((score / total) * 100);
@@ -1529,7 +1556,7 @@ function renderQuizStep(container) {
 
     container.innerHTML = `
       <div class="container quiz-page">
-        <div class="glass-card quiz-result-card">
+        <div class="glass-card quiz-result-card heritage-frame">
           <span class="hero-pill">النتيجة النهائية</span>
           <div class="score-circle">${pct}%</div>
           <h2>${escapeHtml(quiz.title)}</h2>
@@ -1558,9 +1585,7 @@ function renderQuizStep(container) {
       </div>
     `;
 
-    document.getElementById("retry-quiz-btn")?.addEventListener("click", () => {
-      renderQuizPlayerView(container, quiz.id);
-    });
+    document.getElementById("retry-quiz-btn")?.addEventListener("click", () => renderQuizPlayerView(container, quiz.id));
     document.getElementById("back-quizzes-btn")?.addEventListener("click", () => {
       navigateTo({ view: "section", sectionId: "quiz", branch: "الكل" });
     });
@@ -1568,7 +1593,7 @@ function renderQuizStep(container) {
   }
 
   const currentQ = quiz.questions[index];
-  const progress = Math.round(((index) / total) * 100);
+  const progress = Math.round((index / total) * 100);
 
   container.innerHTML = `
     <div class="container quiz-page">
@@ -1578,7 +1603,7 @@ function renderQuizStep(container) {
         <span class="crumb-current">${escapeHtml(quiz.title)}</span>
       </nav>
 
-      <div class="glass-card quiz-box">
+      <div class="glass-card quiz-box heritage-frame">
         <div class="quiz-progress-head">
           <span>السؤال ${index + 1} من ${total}</span>
           <span>${progress}%</span>
@@ -1622,7 +1647,6 @@ function renderQuizStep(container) {
       session.locked = true;
       const chosen = Number(btn.dataset.opt);
       const isCorrect = chosen === Number(currentQ.correctIndex);
-
       session.answers.push({ selected: chosen, correct: isCorrect });
 
       container.querySelectorAll(".quiz-option-btn").forEach((b) => {
@@ -1652,7 +1676,7 @@ function renderQuizStep(container) {
 }
 
 /* ============================================================================
- * 15. نافذة البحث العالمي الذكي (Spotlight Glass Search)
+ * 15. البحث العالمي الذكي (Spotlight) + تنبيه الروابط + مساهمات الطلبة
  * ============================================================================ */
 function openGlobalSearchModal() {
   if (!state.settings.features.globalSearch) return;
@@ -1695,13 +1719,10 @@ function renderGlobalSearchResults(queryText) {
     return;
   }
 
-  // استبعاد الأقسام المخفية من نتائج البحث احتراماً لمفاتيح لوحة التحكم
   const enabledSecIds = new Set(getEnabledSections().map((s) => s.id));
   const searchableItems = state.items.filter((it) => enabledSecIds.has(it.sectionId));
   const matchedItems = smartSearchItems(q, searchableItems).slice(0, 12);
-  const matchedQuizzes = enabledSecIds.has("quiz")
-    ? smartSearchItems(q, state.quizzes).slice(0, 5)
-    : [];
+  const matchedQuizzes = enabledSecIds.has("quiz") ? smartSearchItems(q, state.quizzes).slice(0, 5) : [];
 
   if (!matchedItems.length && !matchedQuizzes.length) {
     listEl.innerHTML = `<div class="spotlight-empty">لا توجد نتائج مطابقة لـ "<strong>${escapeHtml(q)}</strong>". جرّب كلمات مفتاحية أخرى.</div>`;
@@ -1746,9 +1767,6 @@ function renderGlobalSearchResults(queryText) {
   });
 }
 
-/* ============================================================================
- * 16. إشعار الانتقال الآمن للروابط الخارجية (External Link Guard)
- * ============================================================================ */
 function setupExternalLinkInterceptor() {
   document.addEventListener("click", (e) => {
     const anchor = e.target.closest("a[href]");
@@ -1767,9 +1785,7 @@ function setupExternalLinkInterceptor() {
       const preview = document.getElementById("external-link-url");
       if (preview) preview.textContent = href;
       if (modal) modal.hidden = false;
-    } catch {
-      // رابط غير قياسي
-    }
+    } catch {}
   });
 
   document.getElementById("cancel-external-btn")?.addEventListener("click", closeExternalModal);
@@ -1787,9 +1803,6 @@ function closeExternalModal() {
   if (modal) modal.hidden = true;
 }
 
-/* ============================================================================
- * 17. نافذة مشاركة مشاريع وتجارب الطلبة (فضاء التبادل العلمي)
- * ============================================================================ */
 function openSubmissionModal() {
   const modal = document.getElementById("submission-modal");
   if (modal) modal.hidden = false;
@@ -1835,7 +1848,7 @@ function setupSubmissionForm() {
         youtubeUrl: "",
         coverUrl: "",
         tags: ["مساهمة طلابية"],
-        status: "pending", // بانتظار اعتماد المشرف من لوحة التحكم
+        status: "pending",
         views: 0,
         createdAt: new Date().toISOString(),
         submittedAt: serverTimestamp()
@@ -1853,9 +1866,6 @@ function setupSubmissionForm() {
   });
 }
 
-/* ============================================================================
- * 18. الإشعارات الزجاجية اللطيفة (Toast)
- * ============================================================================ */
 function showToast(message) {
   const container = document.getElementById("toast-container");
   if (!container) return;
@@ -1871,10 +1881,9 @@ function showToast(message) {
 }
 
 /* ============================================================================
- * 19. نقطة الانطلاق وربط الأحداث العامة
+ * 16. نقطة الانطلاق
  * ============================================================================ */
 async function init() {
-  // ربط أحداث الشريط العلوي والنوافذ المنبثقة
   document.getElementById("brand-home-link")?.addEventListener("click", (e) => {
     e.preventDefault();
     navigateTo({ view: "home", sectionId: null, branch: "الكل" });
@@ -1889,7 +1898,11 @@ async function init() {
     renderGlobalSearchResults(e.target.value);
   });
 
-  // اختصار لوحة المفاتيح للبحث الذكي ( / أو Ctrl+K ) و Escape للإغلاق
+  document.getElementById("close-lightbox-btn")?.addEventListener("click", closeLightbox);
+  document.getElementById("image-lightbox-modal")?.addEventListener("click", (e) => {
+    if (e.target.id === "image-lightbox-modal") closeLightbox();
+  });
+
   document.addEventListener("keydown", (e) => {
     if ((e.key === "/" || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k")) &&
         !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) {
@@ -1899,6 +1912,7 @@ async function init() {
       closeGlobalSearchModal();
       closeExternalModal();
       closeSubmissionModal();
+      closeLightbox();
     }
   });
 
@@ -1910,7 +1924,6 @@ async function init() {
   setupExternalLinkInterceptor();
   setupSubmissionForm();
 
-  // رسم هيكل التحميل المبدئي ثم جلب البيانات الحية
   renderCurrentView();
   await loadPlatformData();
   parseRouteFromUrl();
