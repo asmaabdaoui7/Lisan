@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- ملف المظهر المطوّر (الحداثة الأصيلة + شبكة الجوال) -->
+  <!-- ملف المظهر الشامل (الإصدار 3.0) -->
   <link rel="stylesheet" href="./style.css" />
 
   <!-- البيانات المنظمة لمحركات البحث (Schema.org JSON-LD) -->
@@ -53,7 +53,7 @@
   <!-- شريط الإعلانات العلوي المرن -->
   <div id="app-announcement" class="app-announcement" role="status" hidden></div>
 
-  <!-- الشريط العلوي الزجاجي الثابت -->
+  <!-- الشريط العلوي الزجاجي المتوازن (مرتب تماماً على الجوال والحاسوب) -->
   <header class="site-header">
     <div class="container header-inner">
       <a href="./" id="brand-home-link" class="brand-link" aria-label="العودة إلى الصفحة الرئيسية لمنصة لسان">
@@ -65,18 +65,26 @@
       </a>
 
       <div class="header-actions">
-        <button type="button" id="header-search-btn" class="icon-glass-btn" aria-label="فتح محرك البحث الذكي">
+        <button type="button" id="header-search-btn" class="icon-glass-btn search-only-icon" aria-label="فتح محرك البحث الذكي">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <span>بحث ذكي</span>
+          <span class="btn-label">بحث ذكي</span>
+        </button>
+
+        <button type="button" id="header-account-btn" class="icon-glass-btn account-pill-btn" aria-label="حساب الطالب">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span class="btn-label">حسابي</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- المحتوى الرئيسي مع هيكل دلالي مسبق للفهرسة الطبيعية لعناكب البحث -->
+  <!-- المحتوى الرئيسي مع هيكل دلالي مسبق للفهرسة الطبيعية -->
   <main id="app-main" aria-live="polite">
     <section class="hero-section container">
       <div class="glass-hero heritage-frame">
@@ -124,15 +132,41 @@
     </section>
   </main>
 
-  <!-- التذييل -->
+  <!-- التذييل + الصفحات التعريفية المرنة + التوقيع الهادئ -->
   <footer class="site-footer">
     <div class="container footer-inner">
-      <p id="footer-text" class="footer-text">لِسَان | LISAN — الفضاء الرقمي الأكاديمي لطلبة اللسانيات العربية</p>
-      <div id="footer-socials" class="footer-socials" aria-label="روابط التواصل"></div>
+      <div class="footer-top-row">
+        <nav id="footer-pages-nav" class="footer-pages-nav" aria-label="الصفحات التعريفية"></nav>
+        <div id="footer-socials" class="footer-socials" aria-label="روابط التواصل"></div>
+      </div>
+
+      <div class="footer-bottom-credit">
+        <p id="footer-text" class="footer-text">لِسَان | LISAN — الفضاء الرقمي الأكاديمي لطلبة اللسانيات العربية</p>
+        <p class="dev-credit">تطوير Rawi Al-Shamal</p>
+      </div>
     </div>
   </footer>
 
-  <!-- نافذة محرك البحث العالمي الذكي (Spotlight Search) -->
+  <!-- زر الدعم الفني العائم (متاح للطلبة والزوار وفاقدي الحسابات) -->
+  <button type="button" id="support-fab" class="support-fab" aria-label="التواصل مع الدعم الفني">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <span>الدعم الفني</span>
+  </button>
+
+  <!-- 1. النافذة الديناميكية العامة (تسجيل الدخول، إنشاء الحساب، الدعم الفني، تأكيد الخصوصية، قريباً) -->
+  <div id="dynamic-modal-backdrop" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="dynamic-modal-title" hidden>
+    <div id="dynamic-modal-dialog" class="dynamic-modal-dialog">
+      <div class="dynamic-modal-header">
+        <h2 id="dynamic-modal-title">منصة لِسَان</h2>
+        <button type="button" id="close-dynamic-modal" class="tool-btn" aria-label="إغلاق النافذة">إغلاق</button>
+      </div>
+      <div id="dynamic-modal-body" class="dynamic-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- 2. نافذة محرك البحث العالمي الذكي (Spotlight Search) -->
   <div id="global-search-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-label="البحث الذكي في المنصة" hidden>
     <div class="spotlight-modal">
       <div class="spotlight-header">
@@ -149,7 +183,7 @@
     </div>
   </div>
 
-  <!-- نافذة التنبيه الآمن عند الانتقال لرابط خارجي -->
+  <!-- 3. نافذة التنبيه الآمن عند الانتقال لرابط خارجي -->
   <div id="external-link-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ext-modal-title" hidden>
     <div class="dialog-modal">
       <h3 id="ext-modal-title">أنت على وشك مغادرة منصة لِسَان</h3>
@@ -162,7 +196,7 @@
     </div>
   </div>
 
-  <!-- نافذة معاينة وتكبير الصور داخل المقالات (Lightbox) -->
+  <!-- 4. نافذة معاينة وتكبير الصور داخل المقالات (Lightbox) -->
   <div id="image-lightbox-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-label="معاينة الصورة بحجم كامل" hidden>
     <div class="lightbox-inner">
       <button type="button" id="close-lightbox-btn" class="lightbox-close" aria-label="إغلاق المعاينة">إغلاق ✕</button>
@@ -171,11 +205,11 @@
     </div>
   </div>
 
-  <!-- نافذة مشاركة مشاريع وتجارب الطلبة -->
+  <!-- 5. نافذة مشاركة مشاريع وتجارب الطلبة -->
   <div id="submission-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="sub-modal-title" hidden>
     <div class="form-modal">
       <h3 id="sub-modal-title">شارك مشروعك أو تجربتك البحثية</h3>
-      <p style="margin: 0 0 18px; font-size: 0.9rem; color: var(--text-secondary);">ستصل مشاركتك إلى هيئة التحرير لمراجعتها واعتماد نشرها في فضاء التبادل العلمي.</p>
+      <p class="light-hint">ستصل مشاركتك إلى هيئة التحرير لمراجعتها واعتماد نشرها باسمك في فضاء التبادل العلمي، ويمكنك متابعة حالتها من ملفك الشخصي.</p>
       <form id="student-submission-form">
         <div class="form-group">
           <label for="sub-student-name">الاسم الكامل أو اسم الفريق البحثي</label>
@@ -210,7 +244,7 @@
     </div>
   </div>
 
-  <!-- حاوية الإشعارات الزجاجية اللطيفة -->
+  <!-- حاوية الإشعارات الزجاجية -->
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
   <!-- المحرك الرئيسي للمنصة -->
